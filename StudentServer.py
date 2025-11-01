@@ -3,6 +3,8 @@ from flask_restful import Api, Resource, reqparse, abort, marshal_with, fields
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
+import cloudinary
+import cloudinary.uploader
 import os
 import uuid
 
@@ -10,13 +12,15 @@ app = Flask(__name__)
 CORS(app)
 api = Api(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Anurag%405475@127.0.0.1:3306/college'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'ImageData')
-app.config['ALLOWED_EXTENTIONS'] = set(['jpg', 'png', 'jpeg', 'gif'])
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+cloudinary.config(
+    cloud_name = "dhhtrfmg3",
+    api_key = "979538325751399",
+    api_secret = "BVdMZtvMfy8B1Og8DSrFf1YgB5E"
+)
 
 db = SQLAlchemy(app)
 
@@ -44,21 +48,21 @@ class Teachers(db.Model):
 class Announcements(db.Model):
     id = db.Column(db.Integer,primary_key = True, autoincrement=True)
     image = db.Column(db.String(255), nullable=False)
-    title = db.Column(db.String(100), primary_key=True)
+    title = db.Column(db.String(100))
     description = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
 class Achievements(db.Model):
     id = db.Column(db.Integer,primary_key = True,autoincrement=True)
     image = db.Column(db.String(255), nullable=False)
-    title = db.Column(db.String(100), primary_key=True)
+    title = db.Column(db.String(100))
     description = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
 class Events(db.Model):
     id = db.Column(db.Integer,primary_key = True,autoincrement=True)
     image = db.Column(db.String(255), nullable=False)
-    title = db.Column(db.String(100), primary_key=True)
+    title = db.Column(db.String(100))
     description = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
@@ -125,18 +129,16 @@ announce_achieve_fields = {
     'created_at' : fields.DateTime
 }
 
+@app.route("/test_db")
+def test_db():
+    try:
+        all_students = Students.query.all()
+        count = len(all_students)
+        return {"message": f"Database connected successfully! Total students: {count}"}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
 
-# GET IMAGE FROM THE SERVER AND DISPLAY IT TO THE USER
-@app.route('/ImageData/<category>/<filename>')
-def uploaded_file(category, filename):
-    directory = os.path.join(app.config['UPLOAD_FOLDER'], category)
-    filepath = os.path.join(directory, filename)
 
-    # Optional: Add debug if file doesn't exist
-    if not os.path.isfile(filepath):
-        return jsonify({"error": f"File not found: {filepath}"}), 404
-
-    return send_from_directory(directory, filename)
 
 @app.route('/upload_post',methods=['POST','DELETE'])
 def upload_post():
@@ -147,25 +149,18 @@ def upload_post():
             title = request.form['title']
             description = request.form['description']
             category = request.form['category'].lower()
-            print("Category Recieved => ",category)
+            # print("Category Recieved => ",category)
 
-            # This makes sure the file name is safe and does not contain dangerous characters (e.g., ../ or \).
-            filename = secure_filename(image.filename)
+            # This makes sure the file name is safe and does not contain dangerous characters (e.g., ../ or \)
 
-            # Create a unique filename to avoid overwritting problem
-            ext = os.path.splitext(filename)[1] # to get the extention of file eg. jpg, png
-            unique_filename = f"{uuid.uuid4().hex}{ext}"
+            upload_image = cloudinary.uploader.upload(
+                image,
+                public_id = category,
+                unique_filename = True,
+                overwrite = False
+            )
 
-            # select the folder in which the image will save
-            save_dir = os.path.join(app.config['UPLOAD_FOLDER'], category)
-            os.makedirs(save_dir, exist_ok=True)
-
-            # save file on server
-            filepath = os.path.join(save_dir,unique_filename)
-            image.save(filepath)
-
-            # create a image url to access it later for image display and db store
-            image_url = f"http://192.168.119.195:5000/ImageData/{category}/{unique_filename}"
+            image_url = upload_image['secure_url']
 
             if (category == "announcement"):
                 announcement = Announcements(image= image_url,title=title,description=description)
