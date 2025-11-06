@@ -3,6 +3,11 @@ from flask_restful import Api, Resource, reqparse, abort, marshal_with, fields
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
+from flask_jwt_extended import (
+    create_access_token, create_refresh_token,
+    jwt_required, get_jwt_identity, JWTManager
+)
+from datetime import timedelta
 import cloudinary
 import cloudinary.uploader
 import os
@@ -12,7 +17,12 @@ app = Flask(__name__)
 CORS(app)
 api = Api(app)
 
-print("DATABASE_URL =", os.getenv("DATABASE_URL"))
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")  # required
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=2)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+
+jwt = JWTManager(app)
+
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 
@@ -143,6 +153,7 @@ def test_db():
 
 
 @app.route('/upload_post',methods=['POST','DELETE'])
+@jwt_required()
 def upload_post():
     if request.method == 'POST':
         try:
@@ -287,11 +298,17 @@ class StudentByDetails(Resource):
 class checkStudent(Resource):
     @marshal_with(resource_fields)
     def get(self, stu_prn, email):
-        result = Students.query.filter_by(prn=stu_prn, email=email).first()
-        if not result:
-            abort(404, message="Student not found")
-            return result
-        return result
+        student = Students.query.filter_by(prn=stu_prn, email=email).first()
+        if not student or not student.password == password:
+            return {"msg": "prn and password required"}, 400
+
+        access_token = create_access_token(identity=student.prn)
+        refresh_token = create_refresh_token(identity=student.prn)
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "student": {"name": student.name, "prn": student.prn}
+        }, 200
     
 #Check Teacher Function
 class checkTeacher(Resource):
@@ -301,16 +318,22 @@ class checkTeacher(Resource):
         teacher_id = request.args.get("teacherId")
         email = request.args.get("email")
 
-        result = Teachers.query.filter_by(teacherId=teacher_id, email=email).first()
-        if not result:
-            abort(404, message="Teacher not found")
-            return result
-        return result
-    print("outside")
+        teacher = Teachers.query.filter_by(teacherId=teacher_id, email=email).first()
+        if not teacher or not teacher.password == password:
+            return {"msg": "prn and password required"}, 400
+
+        access_token = create_access_token(identity=teacher.teacher_id)
+        refresh_token = create_refresh_token(identity=teacher.teacher_id)
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "student": {"name": teacher.name, "ID": teacher.teacher_id}
+        }, 200
 
 
 class GetData(Resource):
     @marshal_with(announce_achieve_fields)
+    @jwt_required()
     def get(self, mode):
         if mode == 0:
             result = Announcements.query.all()
