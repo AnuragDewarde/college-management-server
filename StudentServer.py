@@ -288,8 +288,8 @@ class checkStudent(Resource):
     @marshal_with(resource_fields)
     def get(self, stu_prn, email):
         student = Students.query.filter_by(prn=stu_prn, email=email).first()
-        if not student or not student.password == password:
-            return {"msg": "prn and password required"}, 400
+        if not student or not student.email == email:
+            return {"msg": "prn and email required"}, 400
 
         access_token = create_access_token(identity=student.prn)
         refresh_token = create_refresh_token(identity=student.prn)
