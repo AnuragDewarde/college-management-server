@@ -291,13 +291,7 @@ class checkStudent(Resource):
         if not student or not student.email == email:
             return {"msg": "prn and email required"}, 400
 
-        access_token = create_access_token(identity=student.prn)
-        refresh_token = create_refresh_token(identity=student.prn)
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "student": {"name": student.name, "prn": student.prn}
-        }, 200
+        return student, 200
     
 #Check Teacher Function
 class checkTeacher(Resource):
@@ -311,13 +305,7 @@ class checkTeacher(Resource):
         if not teacher or not teacher.password == password:
             return {"msg": "prn and password required"}, 400
 
-        access_token = create_access_token(identity=teacher.teacher_id)
-        refresh_token = create_refresh_token(identity=teacher.teacher_id)
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "student": {"name": teacher.name, "ID": teacher.teacher_id}
-        }, 200
+        return teacher, 200
 
 
 class GetData(Resource):
