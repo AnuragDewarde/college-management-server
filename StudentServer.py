@@ -40,11 +40,12 @@ class Students(db.Model):
 class Teachers(db.Model):
     teacherId = db.Column(db.Integer,primary_key = True)
     name = db.Column(db.String(100),nullable = False)
-    subject = db.Column(db.String(100),nullable = False)
+    subject = db.Column(db.Text,nullable = False)
     department = db.Column(db.String(100),nullable = False)
     email = db.Column(db.String(100),nullable = False)
     phone = db.Column(db.String(100),nullable = False)
     password = db.Column(db.String(20),nullable = False)
+    working_experience = db.Column(db.String(20),nullable = False)
 
 
 class Announcements(db.Model):
@@ -61,12 +62,50 @@ class Achievements(db.Model):
     description = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
-class Events(db.Model):
+class Competition(db.Model):
     id = db.Column(db.Integer,primary_key = True,autoincrement=True)
     image = db.Column(db.String(255), nullable=False)
     title = db.Column(db.String(100))
     description = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+class Features(db.Model):
+    feature_id = db.Column(db.Integer,primary_key = True,autoincrement=True)
+    name = db.Column(db.String(100),nullable = False)
+    image_url = db.Column(db.Text,nullable = False)
+    details = db.Column(db.Text,nullable = False)
+
+class Placement(db.Model):
+    placement_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    student_name = db.Column(db.String(100), nullable=False)
+    department = db.Column(db.String(100), nullable=False)
+    job_role = db.Column(db.String(100), nullable=False)
+    company_name = db.Column(db.String(100), nullable=False)
+    package = db.Column(db.String(50), nullable=False)
+    image_url = db.Column(db.Text, nullable=False)
+    details = db.Column(db.Text, nullable=False)   # optional: description about placement
+
+class Sports(db.Model):
+    sport_id = db.Column(db.Integer, primary_key=True, autcrement=True)
+    sport_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    image_url = db.Column(db.Text, nullable=False)
+
+class SportAchievements(db.Model):
+    achievement_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    sport_id = db.Column(db.Integer, db.ForeignKey('sports.sport_id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    rank = db.Column(db.String(50), nullable=False)
+    achievement_year = db.Column(db.Integer, nullable=True)
+
+class Events(db.Model):
+    event_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    event_name = db.Column(db.String(150), nullable=False)
+    youtube_link = db.Column(db.Text, nullable=True)
+    description = db.Column(db.Text, nullable=False)
+    image_url = db.Column(db.Text, nullable=False)
+
+
 
 with app.app_context():
     db.create_all()
@@ -98,10 +137,10 @@ achievement_put_args.add_argument("image", type=str, required=True)
 achievement_put_args.add_argument("title", type=str, required=True)
 achievement_put_args.add_argument("description", type=str, required=True)
 
-event_put_args = reqparse.RequestParser()
-event_put_args.add_argument("image", type=str, required=True)
-event_put_args.add_argument("title", type=str, required=True)
-event_put_args.add_argument("description", type=str, required=True)
+competition_put_args = reqparse.RequestParser()
+competition_put_args.add_argument("image", type=str, required=True)
+competition_put_args.add_argument("title", type=str, required=True)
+competition_put_args.add_argument("description", type=str, required=True)
 
 resource_fields = {
     'prn': fields.String,
@@ -177,8 +216,8 @@ def upload_post():
                 print(">> Commit Session Successfully")
 
             elif category == "event":
-                event = Events(image=image_url, title=title, description=description)
-                db.session.add(event)
+                competition = Events(image=image_url, title=title, description=description)
+                db.session.add(competition)
                 db.session.commit()
                 print(">> Commit Session Successfully")
 
