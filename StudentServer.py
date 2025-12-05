@@ -225,12 +225,14 @@ announce_achieve_fields = {
 }
 
 placement_fields = {
-    'placementId': fields.Integer,
-    'companyName': fields.String,
-    'studentName': fields.String,
+    'placement_id': fields.Integer,
+    'student_name': fields.String,
+    'department': fields.String,
+    'job_role': fields.String,
+    'company_name': fields.String,
     'package': fields.String,
-    'year': fields.String,
     'image_url': fields.String,
+    'details': fields.String
 }
 
 sports_fields = {
