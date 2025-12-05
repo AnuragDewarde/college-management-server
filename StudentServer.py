@@ -105,6 +105,22 @@ class Events(db.Model):
     description = db.Column(db.Text, nullable=False)
     image_url = db.Column(db.Text, nullable=False)
 
+class Result(db.Model):
+    result_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    prn = db.Column(db.String(50), nullable=False)
+
+    sem1 = db.Column(db.Float, nullable=True)
+    sem2 = db.Column(db.Float, nullable=True)
+    sem3 = db.Column(db.Float, nullable=True)
+    sem4 = db.Column(db.Float, nullable=True)
+    sem5 = db.Column(db.Float, nullable=True)
+    sem6 = db.Column(db.Float, nullable=True)
+    sem7 = db.Column(db.Float, nullable=True)
+    sem8 = db.Column(db.Float, nullable=True)
+
+    total = db.Column(db.Float, nullable=True)
+
+
 
 
 with app.app_context():
@@ -142,6 +158,44 @@ competition_put_args.add_argument("image", type=str, required=True)
 competition_put_args.add_argument("title", type=str, required=True)
 competition_put_args.add_argument("description", type=str, required=True)
 
+placement_put_args = reqparse.RequestParser()
+placement_put_args.add_argument("student_name", type=str, required=True)
+placement_put_args.add_argument("department", type=str, required=True)
+placement_put_args.add_argument("job_role", type=str, required=True)
+placement_put_args.add_argument("company_name", type=str, required=True)
+placement_put_args.add_argument("package", type=str, required=True)
+placement_put_args.add_argument("image_url", type=str, required=True)
+placement_put_args.add_argument("details", type=str, required=True)
+
+sports_put_args = reqparse.RequestParser()
+sports_put_args.add_argument("sport_name", type=str, required=True)
+sports_put_args.add_argument("description", type=str, required=True)
+sports_put_args.add_argument("image_url", type=str, required=True)
+
+achievement_put_args = reqparse.RequestParser()
+achievement_put_args.add_argument("sport_id", type=int, required=True)
+achievement_put_args.add_argument("title", type=str, required=True)
+achievement_put_args.add_argument("rank", type=str, required=True)
+achievement_put_args.add_argument("achievement_year", type=int)
+
+events_put_args = reqparse.RequestParser()
+events_put_args.add_argument("event_name", type=str, required=True)
+events_put_args.add_argument("youtube_link", type=str)
+events_put_args.add_argument("description", type=str, required=True)
+events_put_args.add_argument("image_url", type=str, required=True)
+
+result_put_args = reqparse.RequestParser()
+result_put_args.add_argument("prn", type=str, required=True)
+result_put_args.add_argument("sem1", type=float, default=0)
+result_put_args.add_argument("sem2", type=float, default=0)
+result_put_args.add_argument("sem3", type=float, default=0)
+result_put_args.add_argument("sem4", type=float, default=0)
+result_put_args.add_argument("sem5", type=float, default=0)
+result_put_args.add_argument("sem6", type=float, default=0)
+result_put_args.add_argument("sem7", type=float, default=0)
+result_put_args.add_argument("sem8", type=float, default=0)
+result_put_args.add_argument("total", type=float, required=True)
+
 resource_fields = {
     'prn': fields.String,
     'name': fields.String,
@@ -169,6 +223,133 @@ announce_achieve_fields = {
     'description': fields.String,
     'created_at' : fields.DateTime
 }
+
+placement_fields = {
+    'placementId': fields.Integer,
+    'companyName': fields.String,
+    'studentName': fields.String,
+    'package': fields.String,
+    'year': fields.String,
+    'image_url': fields.String,
+}
+
+sports_fields = {
+    'sportId': fields.Integer,
+    'teamName': fields.String,
+    'achievement': fields.String,
+    'year': fields.String,
+    'image_url': fields.String,
+}
+
+result_fields = {
+    'result_id': fields.Integer,
+    'prn': fields.String,
+    'sem1': fields.Float,
+    'sem2': fields.Float,
+    'sem3': fields.Float,
+    'sem4': fields.Float,
+    'sem5': fields.Float,
+    'sem6': fields.Float,
+    'sem7': fields.Float,
+    'sem8': fields.Float,
+    'total': fields.Float
+}
+
+events_fields = {
+    'event_id': fields.Integer,
+    'event_name': fields.String,
+    'youtube_link': fields.String,
+    'description': fields.String,
+    'image_url': fields.String
+}
+
+# ==========================
+#   API RESOURCES
+# ==========================
+
+class FeaturesAPI(Resource):
+    def get(self):
+        data = Features.query.all()
+        return jsonify([{
+            "feature_id": f.feature_id,
+            "name": f.name,
+            "image_url": f.image_url,
+            "details": f.details
+        } for f in data])
+
+
+class PlacementAPI(Resource):
+    marshal_with(placement_fields)
+    def get(self):
+        data = Placement.query.all()
+        return data
+
+    def post(self):
+        args = placement_put_args.parse_args()
+        entry = Placement(**args)
+        db.session.add(entry)
+        db.session.commit()
+        return {"message": "Placement added successfully"}, 201
+
+
+class SportsAPI(Resource):
+    marshal_with(sports_fields)
+    def get(self):
+        data = Sports.query.all()
+        return data
+
+    def post(self):
+        args = sports_put_args.parse_args()
+        entry = Sports(**args)
+        db.session.add(entry)
+        db.session.commit()
+        return {"message": "Sport added successfully"}, 201
+
+
+class SportAchievementAPI(Resource):
+    def get(self):
+        data = SportAchievements.query.all()
+        return 
+
+    def post(self):
+        args = achievement_put_args.parse_args()
+        entry = SportAchievements(**args)
+        db.session.add(entry)
+        db.session.commit()
+        return {"message": "Sport Achievement added successfully"}, 201
+
+
+class EventsAPI(Resource):
+    marshal_with(events_fields)
+    def get(self):
+        data = Events.query.all()
+        return data
+
+    def post(self):
+        args = events_put_args.parse_args()
+        entry = Events(**args)
+        db.session.add(entry)
+        db.session.commit()
+        return {"message": "Event added successfully"}, 201
+
+
+class ResultAPI(Resource):
+    marshal_with(result_fields)
+    def get(self, prn):
+        result = Result.query.filter_by(prn=prn).first()
+        if not result:
+            return {"message": "Result not found"}, 404
+
+        return result
+
+    def post(self):
+        args = result_put_args.parse_args()
+        entry = Result(**args)
+        db.session.add(entry)
+        db.session.commit()
+        return {"message": "Result added successfully"}, 201
+
+
 
 @app.route("/test_db")
 def test_db():
@@ -341,7 +522,7 @@ class checkTeacher(Resource):
         email = request.args.get("email")
 
         teacher = Teachers.query.filter_by(teacherId=teacher_id, email=email).first()
-        if not teacher or not teacher.password == password:
+        if not teacher:
             return {"msg": "prn and password required"}, 400
 
         return teacher, 200
@@ -370,6 +551,19 @@ api.add_resource(checkStudent, "/student/<string:stu_prn>/<string:email>")
 api.add_resource(TeacherDetails,"/teacher/<int:teacherId>")
 api.add_resource(checkTeacher,"/checkTeacher")
 api.add_resource(GetData, "/getData/<int:mode>/all")
+
+
+# ==========================
+#   ROUTES REGISTRATION
+# ==========================
+
+api.add_resource(FeaturesAPI, "/features")
+api.add_resource(PlacementAPI, "/placements")
+api.add_resource(SportsAPI, "/sports")
+api.add_resource(SportAchievementAPI, "/sportAchievements")
+api.add_resource(EventsAPI, "/events")
+api.add_resource(ResultAPI, "/result/<string:prn>")
+api.add_resource(ResultAPI, "/result")
 
 if __name__ == '__main__':
     app.run()
