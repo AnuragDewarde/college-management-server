@@ -86,7 +86,7 @@ class Placement(db.Model):
     details = db.Column(db.Text, nullable=False)   # optional: description about placement
 
 class Sports(db.Model):
-    sport_id = db.Column(db.Integer, primary_key=True, autcrement=True)
+    sport_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     sport_name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
     image_url = db.Column(db.Text, nullable=False)
