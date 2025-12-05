@@ -565,7 +565,6 @@ api.add_resource(SportsAPI, "/sports")
 api.add_resource(SportAchievementAPI, "/sportAchievements")
 api.add_resource(EventsAPI, "/events")
 api.add_resource(ResultAPI, "/result/<string:prn>")
-api.add_resource(ResultAPI, "/result")
 
 if __name__ == '__main__':
     app.run()
