@@ -281,7 +281,7 @@ class FeaturesAPI(Resource):
 
 
 class PlacementAPI(Resource):
-    marshal_with(placement_fields)
+    @marshal_with(placement_fields)
     def get(self):
         data = Placement.query.all()
         return data
@@ -295,7 +295,7 @@ class PlacementAPI(Resource):
 
 
 class SportsAPI(Resource):
-    marshal_with(sports_fields)
+    @marshal_with(sports_fields)
     def get(self):
         data = Sports.query.all()
         return data
@@ -322,7 +322,7 @@ class SportAchievementAPI(Resource):
 
 
 class EventsAPI(Resource):
-    marshal_with(events_fields)
+    @marshal_with(events_fields)
     def get(self):
         data = Events.query.all()
         return data
@@ -336,7 +336,7 @@ class EventsAPI(Resource):
 
 
 class ResultAPI(Resource):
-    marshal_with(result_fields)
+    @marshal_with(result_fields)
     def get(self, prn):
         result = Result.query.filter_by(prn=prn).first()
         if not result:
