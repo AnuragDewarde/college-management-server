@@ -71,7 +71,7 @@ class Competition(db.Model):
 
 class Features(db.Model):
     feature_id = db.Column(db.Integer,primary_key = True,autoincrement=True)
-    name = db.Column(db.String(100),nullable = False)
+    feature_name = db.Column(db.String(100),nullable = False)
     image_url = db.Column(db.Text,nullable = False)
     details = db.Column(db.Text,nullable = False)
 
