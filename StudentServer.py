@@ -377,11 +377,17 @@ def upload_post():
 
             # This makes sure the file name is safe and does not contain dangerous characters (e.g., ../ or \)
 
+            # upload_image = cloudinary.uploader.upload(
+            #     image,
+            #     public_id = category,
+            #     unique_filename = True,
+            #     overwrite = False
+            # )
+
             upload_image = cloudinary.uploader.upload(
-                image,
-                public_id = category,
-                unique_filename = True,
-                overwrite = False
+            image,
+            folder=category,          # announcement / achievement / event
+            resource_type="image"
             )
 
             image_url = upload_image['secure_url']
