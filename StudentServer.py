@@ -272,18 +272,17 @@ events_fields = {
 class FeaturesAPI(Resource):
     def get(self):
         data = Features.query.all()
-        return jsonify([{
-            "feature_id": f.feature_id,
-            "name": f.name,
-            "image_url": f.image_url,
-            "details": f.details
-        } for f in data])
+        if not data:
+            abort(404, message="feature data not found")
+        return data
 
 
 class PlacementAPI(Resource):
     @marshal_with(placement_fields)
     def get(self):
         data = Placement.query.all()
+        if not data:
+            abort(404, message="No data found")
         return data
 
     def post(self):
