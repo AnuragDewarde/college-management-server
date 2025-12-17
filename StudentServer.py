@@ -224,6 +224,13 @@ announce_achieve_fields = {
     'created_at' : fields.DateTime
 }
 
+features_fields = {
+    "feature_id": fields.Integer,
+    "feature_name": fields.String,
+    "image_url": fields.String,
+    "details": fields.String
+}
+
 placement_fields = {
     'placement_id': fields.Integer,
     'student_name': fields.String,
@@ -270,12 +277,9 @@ events_fields = {
 # ==========================
 
 class FeaturesAPI(Resource):
+    @marshal_with(features_fields)
     def get(self):
-        data = Features.query.all()
-        if not data:
-            abort(404, message="feature data not found")
-        return data
-
+        return Features.query.all()
 
 class PlacementAPI(Resource):
     @marshal_with(placement_fields)
