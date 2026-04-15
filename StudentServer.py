@@ -105,22 +105,15 @@ class Events(db.Model):
     description = db.Column(db.Text, nullable=False)
     image_url = db.Column(db.Text, nullable=False)
 
-class Result(db.Model):
-    result_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    prn = db.Column(db.String(50), nullable=False)
+class SemesterResult(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    student_prn = db.Column(db.String(100), db.ForeignKey('students.prn'), nullable=False)
+    semester_number = db.Column(db.Integer, nullable=False)
+    sgpa = db.Column(db.Float, nullable=False)
 
-    sem1 = db.Column(db.Float, nullable=True)
-    sem2 = db.Column(db.Float, nullable=True)
-    sem3 = db.Column(db.Float, nullable=True)
-    sem4 = db.Column(db.Float, nullable=True)
-    sem5 = db.Column(db.Float, nullable=True)
-    sem6 = db.Column(db.Float, nullable=True)
-    sem7 = db.Column(db.Float, nullable=True)
-    sem8 = db.Column(db.Float, nullable=True)
-
-    total = db.Column(db.Float, nullable=True)
-
-
+    __table_args__ = (
+        db.UniqueConstraint('student_prn', 'semester_number'),
+    )
 
 
 with app.app_context():
@@ -183,18 +176,6 @@ events_put_args.add_argument("event_name", type=str, required=True)
 events_put_args.add_argument("youtube_link", type=str)
 events_put_args.add_argument("description", type=str, required=True)
 events_put_args.add_argument("image_url", type=str, required=True)
-
-result_put_args = reqparse.RequestParser()
-result_put_args.add_argument("prn", type=str, required=True)
-result_put_args.add_argument("sem1", type=float, default=0)
-result_put_args.add_argument("sem2", type=float, default=0)
-result_put_args.add_argument("sem3", type=float, default=0)
-result_put_args.add_argument("sem4", type=float, default=0)
-result_put_args.add_argument("sem5", type=float, default=0)
-result_put_args.add_argument("sem6", type=float, default=0)
-result_put_args.add_argument("sem7", type=float, default=0)
-result_put_args.add_argument("sem8", type=float, default=0)
-result_put_args.add_argument("total", type=float, required=True)
 
 resource_fields = {
     'prn': fields.String,
@@ -339,20 +320,54 @@ class EventsAPI(Resource):
 
 
 class ResultAPI(Resource):
-    @marshal_with(result_fields)
     def get(self, prn):
-        result = Result.query.filter_by(prn=prn).first()
-        if not result:
-            return {"message": "Result not found"}, 404
+        semesters = SemesterResult.query.filter_by(student_prn=prn)\
+            .order_by(SemesterResult.semester_number).all()
 
-        return result
+        if not semesters:
+            return {"message": "No result found"}, 404
+
+        total = sum([s.sgpa for s in semesters])
+        count = len(semesters)
+        cgpa = round(total / count, 2)
+
+        semester_data = [
+            {
+                "semester": s.semester_number,
+                "sgpa": s.sgpa
+            } for s in semesters
+        ]
+
+        return {
+            "prn": prn,
+            "overall_cgpa": cgpa,
+            "semesters": semester_data
+        }
 
     def post(self):
-        args = result_put_args.parse_args()
-        entry = Result(**args)
-        db.session.add(entry)
-        db.session.commit()
-        return {"message": "Result added successfully"}, 201
+        data = request.get_json()
+
+        student_prn = data.get("student_prn")
+        semester_number = data.get("semester_number")
+        sgpa = data.get("sgpa")
+
+        if not all([student_prn, semester_number, sgpa]):
+            return {"error": "Missing required fields"}, 400
+
+        entry = SemesterResult(
+            student_prn=student_prn,
+            semester_number=semester_number,
+            sgpa=sgpa
+        )
+
+        try:
+            db.session.add(entry)
+            db.session.commit()
+            return {"message": "SGPA added"}, 201
+
+        except Exception as e:
+            db.session.rollback()
+            return {"error": "Semester already exists"}, 400
 
 
 
@@ -550,9 +565,6 @@ class GetData(Resource):
             result = Events.query.all()
         else:
             abort(400, message="Invalid mode")
-
-        if not result:
-            abort(404, message="No data found")
         return result
 
 
@@ -562,6 +574,8 @@ api.add_resource(checkStudent, "/student/<string:stu_prn>/<string:email>")
 api.add_resource(TeacherDetails,"/teacher/<int:teacherId>")
 api.add_resource(checkTeacher,"/checkTeacher")
 api.add_resource(GetData, "/getData/<int:mode>/all")
+api.add_resource(ResultAPI, "/result/<string:prn>")
+
 
 
 # ==========================
@@ -573,7 +587,6 @@ api.add_resource(PlacementAPI, "/placements")
 api.add_resource(SportsAPI, "/sports")
 api.add_resource(SportAchievementAPI, "/sportAchievements")
 api.add_resource(EventsAPI, "/events")
-api.add_resource(ResultAPI, "/result/<string:prn>")
 
 if __name__ == '__main__':
     app.run()
