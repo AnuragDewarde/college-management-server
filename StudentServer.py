@@ -321,28 +321,39 @@ class EventsAPI(Resource):
 
 class ResultAPI(Resource):
     def get(self, prn):
-        semesters = SemesterResult.query.filter_by(student_prn=prn)\
-            .order_by(SemesterResult.semester_number).all()
+        # semesters = SemesterResult.query.filter_by(student_prn=prn)\
+        #     .order_by(SemesterResult.semester_number).all()
+
+        # if not semesters:
+        #     return {"message": "No result found"}, 404
+
+        # total = sum([s.sgpa for s in semesters])
+        # count = len(semesters)
+        # cgpa = round(total / count, 2)
+
+        # semester_data = [
+        #     {
+        #         "semester": s.semester_number,
+        #         "sgpa": s.sgpa
+        #     } for s in semesters
+        # ]
+
+        # return {
+        #     "prn": prn,
+        #     "overall_cgpa": cgpa,
+        #     "semesters": semester_data
+        # }
+
+        print("PRN RECEIVED:", prn)
+
+        all_data = SemesterResult.query.all()
+        print("ALL DATA:", [(d.student_prn, d.semester_number) for d in all_data])
+
+        semesters = SemesterResult.query.filter_by(student_prn=prn).all()
+        print("FILTERED:", semesters)
 
         if not semesters:
             return {"message": "No result found"}, 404
-
-        total = sum([s.sgpa for s in semesters])
-        count = len(semesters)
-        cgpa = round(total / count, 2)
-
-        semester_data = [
-            {
-                "semester": s.semester_number,
-                "sgpa": s.sgpa
-            } for s in semesters
-        ]
-
-        return {
-            "prn": prn,
-            "overall_cgpa": cgpa,
-            "semesters": semester_data
-        }
 
     def post(self):
         data = request.get_json()
