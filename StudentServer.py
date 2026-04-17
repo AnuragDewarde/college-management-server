@@ -321,7 +321,7 @@ class EventsAPI(Resource):
 
 class ResultAPI(Resource):
     def get(self, prn):
-        semesters = SemesterResult.query.filter_by(student_prn=prn)\
+        semesters = SemesterResult.query.filter_by(prn=prn)\
             .order_by(SemesterResult.semester_number).all()
 
         if not semesters:
