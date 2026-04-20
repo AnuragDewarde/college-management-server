@@ -105,6 +105,22 @@ class Events(db.Model):
     description = db.Column(db.Text, nullable=False)
     image_url = db.Column(db.Text, nullable=False)
 
+class Parent(db.Model):
+    __tablename__ = 'parent'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False)
+    phone_number = db.Column(db.String(15), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+
+class StudentParent(db.Model):
+    __tablename__ = 'student_parent'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    student_prn = db.Column(db.String(100), db.ForeignKey('students.prn'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('parent.id'))
+    relation = db.Column(db.String(50))
+
 class SemesterResult(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_prn = db.Column(db.String(100), db.ForeignKey('students.prn'), nullable=False)
@@ -553,6 +569,51 @@ class checkTeacher(Resource):
 
         return teacher, 200
 
+class ParentLogin(Resource):
+
+    def post(self):
+        data = request.get_json()
+
+        phone = data.get("phone_number")
+        password = data.get("password")
+
+        parent = Parent.query.filter_by(
+            phone_number=phone,
+            password=password
+        ).first()
+
+        if not parent:
+            return {"status": "error", "message": "Invalid credentials"}, 401
+
+        return {
+            "status": "success",
+            "parent_id": parent.id,
+            "name": parent.name
+        }, 200
+
+class ParentStudentsResource(Resource):
+
+    def get(self, parent_id):
+
+        data = db.session.query(Students, StudentParent.relation).join(
+            StudentParent, Students.prn == StudentParent.student_prn
+        ).filter(
+            StudentParent.parent_id == parent_id
+        ).all()
+
+        result = []
+
+        for student, relation in data:
+            result.append({
+                "name": student.name,
+                "prn": student.prn,
+                "branch": student.branch,
+                "year": student.year,
+                "relation": relation
+            })
+
+        return {"students": result}, 200
+
 
 class GetData(Resource):
     @marshal_with(announce_achieve_fields)
@@ -575,6 +636,8 @@ api.add_resource(TeacherDetails,"/teacher/<int:teacherId>")
 api.add_resource(checkTeacher,"/checkTeacher")
 api.add_resource(GetData, "/getData/<int:mode>/all")
 api.add_resource(ResultAPI, "/result/<string:prn>")
+api.add_resource(ParentLogin, "/parent/login")
+api.add_resource(ParentStudentsResource, "/parent/<int:parent_id>/students")
 
 
 
