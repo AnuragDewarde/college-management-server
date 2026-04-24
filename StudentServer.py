@@ -162,6 +162,7 @@ announce_put_args = reqparse.RequestParser()
 announce_put_args.add_argument("image", type=str, required=True)
 announce_put_args.add_argument("title", type=str)
 announce_put_args.add_argument("description", type=str, required=True)
+announce_put_args.add_argument("dept", type=str, required=False, default="All Dept")
 
 achievement_put_args = reqparse.RequestParser()
 achievement_put_args.add_argument("image", type=str, required=True)
@@ -224,7 +225,8 @@ announce_achieve_fields = {
     'image': fields.String,
     'title': fields.String,
     'description': fields.String,
-    'created_at' : fields.DateTime
+    'created_at' : fields.DateTime,
+    'dept': fields.String
 }
 
 features_fields = {
@@ -413,6 +415,7 @@ def upload_post():
             title = request.form['title']
             description = request.form['description']
             category = request.form['category'].lower()
+            dept = request.form.get('dept', 'All Dept')
             # print("Category Recieved => ",category)
 
             # This makes sure the file name is safe and does not contain dangerous characters (e.g., ../ or \)
@@ -433,7 +436,7 @@ def upload_post():
             image_url = upload_image['secure_url']
 
             if (category == "announcement"):
-                announcement = Announcements(image= image_url,title=title,description=description)
+                announcement = Announcements(image=image_url,title=title,description=description,dept=dept)
                 db.session.add(announcement)
                 db.session.commit()
                 print(">> Commit Session Successfully")
@@ -624,8 +627,9 @@ class ParentStudentsResource(Resource):
 class GetData(Resource):
     @marshal_with(announce_achieve_fields)
     def get(self, mode):
+        dept = request.args.get("dept", "All Dept")
         if mode == 0:
-            result = Announcements.query.all()
+            result = Announcements.query.filter((Announcements.dept == dept) | (Announcements.dept == "All Dept")).all()
         elif mode == 1:
             result = Achievements.query.all()
         elif mode == 2:
