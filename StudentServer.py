@@ -49,11 +49,17 @@ class Teachers(db.Model):
 
 
 class Announcements(db.Model):
-    id = db.Column(db.Integer,primary_key = True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     image = db.Column(db.String(255), nullable=False)
     title = db.Column(db.String(100))
     description = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    dept = db.Column(
+        db.String(20),
+        nullable=False,
+        server_default='All Dept'
+    )
 
 class Achievements(db.Model):
     id = db.Column(db.Integer,primary_key = True,autoincrement=True)
