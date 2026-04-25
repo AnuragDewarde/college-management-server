@@ -54,7 +54,6 @@ class Announcements(db.Model):
     title = db.Column(db.String(100))
     description = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
-
     dept = db.Column(
         db.String(20),
         nullable=False,
