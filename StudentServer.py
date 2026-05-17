@@ -519,6 +519,12 @@ class TeacherDetails(Resource):
         db.session.commit()
         return {"message": "Student deleted successfully"}, 200
 
+class TeachersList(Resource):
+
+    @marshal_with(teacher_fields)
+    def get(self):
+        return Teachers.query.all()
+
 class StudentByPRN(Resource):
     @marshal_with(resource_fields)
     def get(self, stu_prn):
@@ -646,6 +652,7 @@ api.add_resource(StudentByPRN, "/student/<string:stu_prn>")
 api.add_resource(StudentByDetails, "/student/<string:branch>/<string:year>/<string:div>/<int:rollno>")
 api.add_resource(checkStudent, "/student/<string:stu_prn>/<string:email>")
 api.add_resource(TeacherDetails,"/teacher/<int:teacherId>")
+api.add_resource(TeachersList, "/teachers")
 api.add_resource(checkTeacher,"/checkTeacher")
 api.add_resource(GetData, "/getData/<int:mode>/all")
 api.add_resource(ResultAPI, "/result/<string:prn>")
