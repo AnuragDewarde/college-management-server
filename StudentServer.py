@@ -46,6 +46,7 @@ class Teachers(db.Model):
     phone = db.Column(db.String(100),nullable = False)
     password = db.Column(db.String(20),nullable = False)
     working_experience = db.Column(db.String(20),nullable = False)
+    profile_pic = db.Column(db.String(255), nullable=False, default="Default Image")
 
 
 class Announcements(db.Model):
@@ -156,6 +157,8 @@ teacher_put_args.add_argument("department",type=str,required= True)
 teacher_put_args.add_argument("email",type=str,required= True)
 teacher_put_args.add_argument("phone",type=str,required= True)
 teacher_put_args.add_argument("password",type=str,required= True)
+teacher_put_args.add_argument("profile_pic", type=str, required=False)
+
 
 announce_put_args = reqparse.RequestParser()
 announce_put_args.add_argument("image", type=str, required=True)
@@ -217,6 +220,7 @@ teacher_fields = {
     'email' : fields.String,
     'phone' : fields.String,
     'password' : fields.String
+    'profile_pic' : fields.String
 }
 
 announce_achieve_fields = {
