@@ -219,7 +219,7 @@ teacher_fields = {
     'department' : fields.String,
     'email' : fields.String,
     'phone' : fields.String,
-    'password' : fields.String
+    'password' : fields.String,
     'profile_pic' : fields.String
 }
 
