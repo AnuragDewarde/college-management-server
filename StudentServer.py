@@ -157,6 +157,7 @@ teacher_put_args.add_argument("department",type=str,required= True)
 teacher_put_args.add_argument("email",type=str,required= True)
 teacher_put_args.add_argument("phone",type=str,required= True)
 teacher_put_args.add_argument("password",type=str,required= True)
+teacher_put_args.add_argument("working_experience", type=str, required=True)
 teacher_put_args.add_argument("profile_pic", type=str, required=False)
 
 
@@ -219,7 +220,9 @@ teacher_fields = {
     'department' : fields.String,
     'email' : fields.String,
     'phone' : fields.String,
+    'working_experience' : fields.String,
     'password' : fields.String,
+    
     'profile_pic' : fields.String
 }
 
