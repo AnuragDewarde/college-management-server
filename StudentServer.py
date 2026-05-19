@@ -451,9 +451,19 @@ def upload_post():
                 print(">> Commit Session Successfully")
 
             elif category == "event":
-                competition = Events(image=image_url, title=title, description=description)
-                db.session.add(competition)
+
+                youtube_link = request.form.get("youtube_link", "")
+
+                event = Events(
+                    event_name=title,
+                    youtube_link=youtube_link,
+                    description=description,
+                    image_url=image_url
+                )
+
+                db.session.add(event)
                 db.session.commit()
+
                 print(">> Commit Session Successfully")
 
             elif(category == "attendance"):
