@@ -89,7 +89,6 @@ class Placement(db.Model):
     company_name = db.Column(db.String(100), nullable=False)
     package = db.Column(db.String(50), nullable=False)
     image_url = db.Column(db.Text, nullable=False)
-    details = db.Column(db.Text, nullable=False)   # optional: description about placement
 
 class Sports(db.Model):
     sport_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -184,7 +183,6 @@ placement_put_args.add_argument("job_role", type=str, required=True)
 placement_put_args.add_argument("company_name", type=str, required=True)
 placement_put_args.add_argument("package", type=str, required=True)
 placement_put_args.add_argument("image_url", type=str, required=True)
-placement_put_args.add_argument("details", type=str, required=True)
 
 sports_put_args = reqparse.RequestParser()
 sports_put_args.add_argument("sport_name", type=str, required=True)
@@ -250,7 +248,6 @@ placement_fields = {
     'company_name': fields.String,
     'package': fields.String,
     'image_url': fields.String,
-    'details': fields.String
 }
 
 sports_fields = {
