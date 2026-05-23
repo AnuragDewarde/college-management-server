@@ -189,11 +189,11 @@ sports_put_args.add_argument("sport_name", type=str, required=True)
 sports_put_args.add_argument("description", type=str, required=True)
 sports_put_args.add_argument("image_url", type=str, required=True)
 
-achievement_put_args = reqparse.RequestParser()
-achievement_put_args.add_argument("sport_id", type=int, required=True)
-achievement_put_args.add_argument("title", type=str, required=True)
-achievement_put_args.add_argument("rank", type=str, required=True)
-achievement_put_args.add_argument("achievement_year", type=int)
+sport_achievement_put_args = reqparse.RequestParser()
+sport_achievement_put_args.add_argument("sport_id", type=int, required=True)
+sport_achievement_put_args.add_argument("title", type=str, required=True)
+sport_achievement_put_args.add_argument("rank", type=str, required=True)
+sport_achievement_put_args.add_argument("achievement_year", type=int)
 
 events_put_args = reqparse.RequestParser()
 events_put_args.add_argument("event_name", type=str, required=True)
@@ -251,11 +251,18 @@ placement_fields = {
 }
 
 sports_fields = {
-    'sportId': fields.Integer,
-    'teamName': fields.String,
-    'achievement': fields.String,
-    'year': fields.String,
+    'sport_id': fields.Integer,
+    'sport_name': fields.String,
+    'description': fields.String,
     'image_url': fields.String,
+}
+
+sport_achievement_fields = {
+    'achievement_id': fields.Integer,
+    'sport_id': fields.Integer,
+    'title': fields.String,
+    'rank': fields.String,
+    'achievement_year': fields.Integer
 }
 
 result_fields = {
@@ -320,16 +327,28 @@ class SportsAPI(Resource):
 
 
 class SportAchievementAPI(Resource):
-    def get(self):
-        data = SportAchievements.query.all()
-        return 
+
+    @marshal_with(sport_achievement_fields)
+    def get(self, sport_id):
+
+        data = SportAchievements.query.filter_by(
+            sport_id=sport_id
+        ).all()
+
+        return data
 
     def post(self):
-        args = achievement_put_args.parse_args()
+
+        args = sport_achievement_put_args.parse_args()
+
         entry = SportAchievements(**args)
+
         db.session.add(entry)
         db.session.commit()
-        return {"message": "Sport Achievement added successfully"}, 201
+
+        return {
+            "message": "Sport Achievement added successfully"
+        }, 201
 
 
 class EventsAPI(Resource):
@@ -678,7 +697,10 @@ api.add_resource(ParentStudentsResource, "/parent/<int:parent_id>/students")
 api.add_resource(FeaturesAPI, "/features")
 api.add_resource(PlacementAPI, "/placements")
 api.add_resource(SportsAPI, "/sports")
-api.add_resource(SportAchievementAPI, "/sportAchievements")
+api.add_resource(
+    SportAchievementAPI,
+    "/sports/<int:sport_id>/achievements"
+)
 api.add_resource(EventsAPI, "/events")
 
 if __name__ == '__main__':
