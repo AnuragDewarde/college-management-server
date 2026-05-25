@@ -126,6 +126,16 @@ class StudentParent(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('parent.id'))
     relation = db.Column(db.String(50))
 
+class DataEntry(db.Model):
+
+    __tablename__ = "data_entry_users"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    username = db.Column(db.String(100),unique=True,nullable=False)
+
+    password = db.Column(db.String(100),nullable=False)
+
 class SemesterResult(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     student_prn = db.Column(db.String(100), db.ForeignKey('students.prn'), nullable=False)
@@ -661,6 +671,31 @@ class ParentStudentsResource(Resource):
 
         return {"students": result}, 200
 
+@app.route('/dataEntryLogin', methods=['POST'])
+def data_entry_login():
+
+    data = request.get_json()
+
+    username = data.get("username")
+    password = data.get("password")
+
+    user = DataEntry.query.filter_by(
+        username=username,
+        password=password
+    ).first()
+
+    if user:
+
+        return jsonify({
+            "success": True,
+            "message": "Login Successful",
+            "user_id": user.id
+        })
+
+    return jsonify({
+        "success": False,
+        "message": "Invalid Credentials"
+    })
 
 class GetData(Resource):
     @marshal_with(announce_achieve_fields)
