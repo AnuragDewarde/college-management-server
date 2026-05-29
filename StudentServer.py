@@ -100,7 +100,7 @@ class SportAchievements(db.Model):
     achievement_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     sport_id = db.Column(db.Integer, db.ForeignKey('sports.sport_id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
-    rank = db.Column(db.String(50), nullable=False)
+    position = db.Column(db.String(50), nullable=False)
     achievement_year = db.Column(db.Integer, nullable=True)
 
 class Events(db.Model):
@@ -202,7 +202,7 @@ sports_put_args.add_argument("image_url", type=str, required=True)
 sport_achievement_put_args = reqparse.RequestParser()
 sport_achievement_put_args.add_argument("sport_id", type=int, required=True)
 sport_achievement_put_args.add_argument("title", type=str, required=True)
-sport_achievement_put_args.add_argument("rank", type=str, required=True)
+sport_achievement_put_args.add_argument("position", type=str, required=True)
 sport_achievement_put_args.add_argument("achievement_year", type=int)
 
 events_put_args = reqparse.RequestParser()
@@ -271,7 +271,7 @@ sport_achievement_fields = {
     'achievement_id': fields.Integer,
     'sport_id': fields.Integer,
     'title': fields.String,
-    'rank': fields.String,
+    'position': fields.String,
     'achievement_year': fields.Integer
 }
 
