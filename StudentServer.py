@@ -110,6 +110,64 @@ class Events(db.Model):
     description = db.Column(db.Text, nullable=False)
     image_url = db.Column(db.Text, nullable=False)
 
+class FeeType(db.Model):
+    __tablename__ = "fee_types"
+
+    fee_type_id = db.Column(db.Integer, primary_key=True)
+    fee_name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255))
+
+class StudentFee(db.Model):
+    __tablename__ = "student_fees"
+
+    student_fee_id = db.Column(db.Integer, primary_key=True)
+
+    student_id = db.Column(
+        db.String(20),
+        db.ForeignKey("students.student_id"),
+        nullable=False
+    )
+
+    fee_type_id = db.Column(
+        db.Integer,
+        db.ForeignKey("fee_types.fee_type_id"),
+        nullable=False
+    )
+
+    total_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    paid_amount = db.Column(db.Numeric(10, 2), default=0)
+    due_amount = db.Column(db.Numeric(10, 2), nullable=False)
+
+    academic_year = db.Column(db.String(20))
+
+class FeeTransaction(db.Model):
+    __tablename__ = "fee_transactions"
+
+    transaction_id = db.Column(db.Integer, primary_key=True)
+
+    student_id = db.Column(
+        db.String(20),
+        db.ForeignKey("students.student_id"),
+        nullable=False
+    )
+
+    fee_type_id = db.Column(
+        db.Integer,
+        db.ForeignKey("fee_types.fee_type_id"),
+        nullable=False
+    )
+
+    amount_paid = db.Column(db.Numeric(10, 2), nullable=False)
+
+    payment_date = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    payment_method = db.Column(db.String(50))
+    transaction_reference = db.Column(db.String(100))
+    status = db.Column(db.String(20), default="Success")
+
 class Parent(db.Model):
     __tablename__ = 'parent'
 
@@ -671,6 +729,53 @@ class ParentStudentsResource(Resource):
 
         return {"students": result}, 200
 
+# Fees Functions 
+from flask_restful import Resource
+
+class StudentFeesAPI(Resource):
+
+    def get(self, student_id):
+
+        fees = (
+            db.session.query(
+                StudentFee,
+                FeeType.fee_name
+            )
+            .join(
+                FeeType,
+                StudentFee.fee_type_id == FeeType.fee_type_id
+            )
+            .filter(
+                StudentFee.student_id == student_id
+            )
+            .all()
+        )
+
+        if not fees:
+            return {
+                "status": False,
+                "message": "No fee records found"
+            }, 404
+
+        result = []
+
+        for fee, fee_name in fees:
+            result.append({
+                "student_fee_id": fee.student_fee_id,
+                "fee_type_id": fee.fee_type_id,
+                "fee_name": fee_name,
+                "total_amount": float(fee.total_amount),
+                "paid_amount": float(fee.paid_amount),
+                "due_amount": float(fee.due_amount),
+                "academic_year": fee.academic_year
+            })
+
+        return {
+            "status": True,
+            "student_id": student_id,
+            "fees": result
+        }, 200
+
 @app.route('/dataEntryLogin', methods=['POST'])
 def data_entry_login():
 
@@ -737,6 +842,8 @@ api.add_resource(
     "/sports/<int:sport_id>/achievements"
 )
 api.add_resource(EventsAPI, "/events")
+
+api.add_resource(StudentFeesAPI,"/fees/<string:student_id>")
 
 if __name__ == '__main__':
     app.run()
