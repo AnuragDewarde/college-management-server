@@ -38,6 +38,18 @@ class Students(db.Model):
     phone = db.Column(db.String(10), nullable=True)
     password = db.Column(db.String(20),nullable = False)
 
+    class_id = db.Column(
+    db.Integer,
+    db.ForeignKey("classes.class_id"),
+    nullable=True
+    )
+
+    batch_id = db.Column(
+        db.Integer,
+        db.ForeignKey("batches.batch_id"),
+        nullable=True
+    )
+
 class Teachers(db.Model):
     teacherId = db.Column(db.Integer,primary_key = True)
     name = db.Column(db.String(100),nullable = False)
@@ -48,6 +60,222 @@ class Teachers(db.Model):
     password = db.Column(db.String(20),nullable = False)
     working_experience = db.Column(db.String(20),nullable = False)
     profile_pic = db.Column(db.String(255), nullable=False, default="Default Image")
+
+class Classes(db.Model):
+
+    __tablename__ = "classes"
+
+    class_id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    class_name = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    department = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    semester = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+class Batches(db.Model):
+
+    __tablename__ = "batches"
+
+    batch_id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    class_id = db.Column(
+        db.Integer,
+        db.ForeignKey("classes.class_id"),
+        nullable=False
+    )
+
+    batch_name = db.Column(
+        db.String(20),
+        nullable=False
+    )
+
+class Subjects(db.Model):
+
+    __tablename__ = "subjects"
+
+    subject_id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    subject_name = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+class TeacherSubjectMapping(db.Model):
+
+    __tablename__ = "teacher_subject_mapping"
+
+    mapping_id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    teacher_id = db.Column(
+        db.Integer,
+        db.ForeignKey("teachers.teacherId"),
+        nullable=False
+    )
+
+    subject_id = db.Column(
+        db.Integer,
+        db.ForeignKey("subjects.subject_id"),
+        nullable=False
+    )
+
+    class_id = db.Column(
+        db.Integer,
+        db.ForeignKey("classes.class_id"),
+        nullable=False
+    )
+
+    batch_id = db.Column(
+        db.Integer,
+        db.ForeignKey("batches.batch_id"),
+        nullable=True
+    )
+
+    assignment_type = db.Column(
+        db.Enum(
+            "THEORY",
+            "PRACTICAL",
+            name="assignment_type_enum"
+        ),
+        nullable=False
+    )
+
+class AttendanceSession(db.Model):
+
+    __tablename__ = "attendance_session"
+
+    session_id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    teacher_id = db.Column(
+        db.Integer,
+        db.ForeignKey("teachers.teacherId"),
+        nullable=False
+    )
+
+    subject_id = db.Column(
+        db.Integer,
+        db.ForeignKey("subjects.subject_id"),
+        nullable=False
+    )
+
+    class_id = db.Column(
+        db.Integer,
+        db.ForeignKey("classes.class_id"),
+        nullable=False
+    )
+
+    batch_id = db.Column(
+        db.Integer,
+        db.ForeignKey("batches.batch_id"),
+        nullable=True
+    )
+
+    attendance_scope = db.Column(
+        db.Enum(
+            "DIVISION",
+            "BATCH",
+            name="attendance_scope_enum"
+        ),
+        nullable=False
+    )
+
+    session_type = db.Column(
+        db.Enum(
+            "THEORY",
+            "PRACTICAL",
+            "SPECIAL_LECTURE",
+            "WORKSHOP",
+            "SEMINAR",
+            name="session_type_enum"
+        ),
+        default="THEORY"
+    )
+
+    session_title = db.Column(
+        db.String(200)
+    )
+
+    attendance_date = db.Column(
+        db.Date,
+        nullable=False
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+class Attendance(db.Model):
+
+    __tablename__ = "attendance"
+
+    attendance_id = db.Column(
+        db.Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    session_id = db.Column(
+        db.Integer,
+        db.ForeignKey(
+            "attendance_session.session_id"
+        ),
+        nullable=False
+    )
+
+    prn = db.Column(
+        db.String(100),
+        db.ForeignKey(
+            "students.prn"
+        ),
+        nullable=False
+    )
+
+    status = db.Column(
+        db.Enum(
+            "Present",
+            "Absent",
+            name="attendance_status_enum"
+        ),
+        nullable=False
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "session_id",
+            "prn",
+            name="unique_attendance"
+        ),
+    )
 
 
 class Announcements(db.Model):
@@ -229,6 +457,34 @@ teacher_put_args.add_argument("phone",type=str,required= True)
 teacher_put_args.add_argument("password",type=str,required= True)
 teacher_put_args.add_argument("working_experience", type=str, required=True)
 teacher_put_args.add_argument("profile_pic", type=str, required=False)
+
+attendance_mapping_fields = {
+    "mapping_id": fields.Integer,
+    "teacher_id": fields.Integer,
+    "subject_id": fields.Integer,
+    "class_id": fields.Integer,
+    "batch_id": fields.Integer,
+    "assignment_type": fields.String
+}
+
+attendance_session_fields = {
+    "session_id": fields.Integer,
+    "teacher_id": fields.Integer,
+    "subject_id": fields.Integer,
+    "class_id": fields.Integer,
+    "batch_id": fields.Integer,
+    "attendance_scope": fields.String,
+    "session_type": fields.String,
+    "session_title": fields.String,
+    "attendance_date": fields.String
+}
+
+attendance_fields = {
+    "attendance_id": fields.Integer,
+    "session_id": fields.Integer,
+    "prn": fields.String,
+    "status": fields.String
+}
 
 
 announce_put_args = reqparse.RequestParser()
