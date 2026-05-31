@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
 from datetime import timedelta
+from datetime import datetime
 import cloudinary
 import cloudinary.uploader
 import os
@@ -124,7 +125,7 @@ class StudentFee(db.Model):
 
     student_id = db.Column(
         db.String(20),
-        db.ForeignKey("students.student_id"),
+        db.ForeignKey("students.prn"),
         nullable=False
     )
 
@@ -147,7 +148,7 @@ class FeeTransaction(db.Model):
 
     student_id = db.Column(
         db.String(20),
-        db.ForeignKey("students.student_id"),
+        db.ForeignKey("students.prn"),
         nullable=False
     )
 
@@ -167,6 +168,8 @@ class FeeTransaction(db.Model):
     payment_method = db.Column(db.String(50))
     transaction_reference = db.Column(db.String(100))
     status = db.Column(db.String(20), default="Success")
+    razorpay_payment_id = db.Column(db.String(100))
+    razorpay_order_id = db.Column(db.String(100))
 
 class Parent(db.Model):
     __tablename__ = 'parent'
@@ -730,8 +733,6 @@ class ParentStudentsResource(Resource):
         return {"students": result}, 200
 
 # Fees Functions 
-from flask_restful import Resource
-
 class StudentFeesAPI(Resource):
 
     def get(self, student_id):
@@ -746,7 +747,7 @@ class StudentFeesAPI(Resource):
                 StudentFee.fee_type_id == FeeType.fee_type_id
             )
             .filter(
-                StudentFee.student_id == student_id
+                StudentFee.prn == prn
             )
             .all()
         )
