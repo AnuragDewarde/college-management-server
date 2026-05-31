@@ -747,7 +747,7 @@ class StudentFeesAPI(Resource):
                 StudentFee.fee_type_id == FeeType.fee_type_id
             )
             .filter(
-                StudentFee.prn == prn
+                StudentFee.student_id == prn
             )
             .all()
         )
