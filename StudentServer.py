@@ -517,7 +517,6 @@ sports_put_args.add_argument("description", type=str, required=True)
 sports_put_args.add_argument("image_url", type=str, required=True)
 
 sport_achievement_put_args = reqparse.RequestParser()
-sport_achievement_put_args.add_argument("sport_id", type=int, required=True)
 sport_achievement_put_args.add_argument("title", type=str, required=True)
 sport_achievement_put_args.add_argument("position", type=str, required=True)
 sport_achievement_put_args.add_argument("achievement_year", type=int)
@@ -657,16 +656,17 @@ class SportAchievementAPI(Resource):
 
     @marshal_with(sport_achievement_fields)
     def get(self, sport_id):
-
         data = SportAchievements.query.filter_by(
             sport_id=sport_id
         ).all()
 
         return data
 
-    def post(self):
+    def post(self, sport_id):
 
         args = sport_achievement_put_args.parse_args()
+
+        args["sport_id"] = sport_id
 
         entry = SportAchievements(**args)
 
